@@ -1,0 +1,174 @@
+#' PCA analysis of data
+#'
+#' @importFrom rlang .data
+#' @import ggplot2
+#' @param data A matrix representing the genomic data such as gene expression data, miRNA expression data.\cr
+#' For the matrix, the rows represent the genomic features, and the columns represent the samples.
+#' @param group A data frame contain two columns. The first column is sample name matched with colnames of data,
+#' The second column is the cluster label of samples.
+#' @param pic_title The title of plot.
+#' @param ellipse Whether add the confidence ellipse.
+#'
+#' @return
+#' Return a `ggplot` object contained a PCA plot.
+#'
+#' @export
+#'
+plot_pca <- function(data, group, pic_title = "All-PCA", ellipse = FALSE) {
+  # check samples
+  colnames(group) <- c('ID', 'Type')
+  if (ncol(data) != length(unique(group$ID))) {
+    stop('The sample in `group` not all matched with `data`')
+  }
+
+  ##
+  ID <- unique(as.vector(group$ID))
+  subdata <- subset(data, select = ID)
+  #subdata=log2(subdata)  #定量矩阵有0值，不能直接log转换
+  subdata <- t(na.omit(subdata))
+  data.pca <- prcomp(subdata, scale. = TRUE)
+  # summary(data.pca)
+  pca <- as.data.frame(data.pca$x)
+  pca$ID <- rownames(pca)
+  pca <- merge(pca, group, by = "ID")
+  percent1 <- sprintf("%.1f%%", data.pca$sdev[1]^2/sum(data.pca$sdev^2)*100)
+  percent2 <- sprintf("%.1f%%", data.pca$sdev[2]^2/sum(data.pca$sdev^2)*100)
+  xlabel <- paste("PC1 (",percent1,")")
+  ylabel <- paste("PC2 (",percent2,")")
+
+  p <- ggplot(pca, aes(x = .data$PC1, y = .data$PC2, fill = .data$Type)) +
+    geom_point(shape = "circle filled", size = 2.5, colour = 'black') +
+    # geom_text(aes(label = ID), hjust = 0, vjust = 0) +
+    scale_fill_brewer(palette = "Set1", direction = 1) +
+    labs(x = xlabel, y = ylabel, title = pic_title) +
+    guides(fill = guide_legend(title = "Sample type")) +
+    theme_bw() +
+    theme(plot.title = element_text(hjust=0.5))
+
+  if (ellipse) {
+    # add confidence ellipses use stat_conf_ellipse from ggpubr
+    p <- p +
+      stat_ellipse(aes(colour = .data$Type), level = 0.95, geom = "polygon",
+                   alpha = 0.3, lwd = 1, show.legend = F) +
+      scale_color_brewer(palette = "Set1", direction = 1)
+    # stat_conf_ellipse(alpha = 0.3, geom = 'polygon')
+  }
+  return(p)
+}
+
+
+#' Draw Venn plot
+#'
+#' @importFrom VennDiagram venn.diagram
+#' @importFrom grid grid.draw
+#' @importFrom rlang .data
+#' @importFrom ggplot2 ggsave
+#' @param x A list of vectors (e.g., integers, chars), with each component corresponding to a separate circle in the Venn diagram
+#' @param filename Filename for image output, or if NULL returns the grid object itself
+#' @param width Integer giving the width of the output figure in units
+#' @param height Integer giving the height of the output figure in units
+#' @param ... other argument of \code{magrittr::\link[magrittr:pipe]{\%>\%}}
+#'
+#' @export
+#'
+plot_venn <- function(x, filename = NULL, width = 7, height = 7, ...) {
+
+  ## set base attributes
+  dots <- list(...)
+  if(is.null(dots$cat.cex)) dots$cat.cex = 1
+  if(is.null(dots$cat.col)) dots$cat.col = "black"
+  if(is.null(dots$cat.fontface)) dots$cat.fontface = "plain"
+  if(is.null(dots$cat.fontfamily)) dots$cat.fontfamily = "serif"
+
+  ## get plot
+  # op <- par(mar=c(0,0,0,0))
+  # on.exit(par(op))
+  # grid.newpage()
+  dots$x <- x
+  dots <- c(dots, filename = list(NULL))
+  venngrid <- do.call(VennDiagram::venn.diagram, dots)
+  unlink(dir(getwd(), pattern="^VennDiagram[0-9_\\-]+.log$"))
+  ## show picture in windows
+  if (Sys.info()['sysname'] == "Windows") {
+    grid.draw(venngrid)
+  }
+  if (!is.null(filename)) {
+    ggplot2::ggsave(filename = filename, plot = venngrid, width = width, height = height)
+  } else {
+    return(venngrid)
+  }
+
+}
+
+#' Plot data density curve
+#' @param dat_matrix The data matrix with column in sample and row in feature
+#' @param type Plot the density curve by sample or in all data
+#'
+#' @importFrom utils stack
+#' @importFrom rlang .data
+#' @import ggplot2
+#' @return Return a `ggplot` object
+#'
+#' @export
+#'
+plot_density <- function(dat_matrix, type = c('all', 'group')) {
+
+  dat_df <- stack(as.data.frame(dat_matrix))
+  type <- match.arg(type)
+  if (type == 'all') {
+    p <- ggplot(dat_df, aes(x= .data$values)) + geom_density()
+  } else if (type == 'group') {
+    p <- ggplot(dat_df, aes(x = .data$values)) +
+      geom_density(aes(group = .data$ind, colour = .data$ind)) +
+      theme(legend.position = 'none')
+  }
+  return(p)
+}
+
+#' Plot data density curve of each sample by facet
+#' @param dat_matrix The data matrix with column in sample and row in feature
+#' @importFrom utils stack
+#' @importFrom rlang .data
+#' @import ggplot2
+#'
+#' @return Return a `ggplot` object
+#'
+#' @export
+#'
+plot_density_by_sample <- function(dat_matrix) {
+  dat_df <- stack(as.data.frame(dat_matrix))
+  pic <- ggplot(dat_df) +
+    facet_wrap(vars(.data$ind)) +
+    aes(x = .data$values, colour = .data$ind) +
+    geom_density(adjust = 1L)  +
+    scale_color_hue(direction = 1) +
+    theme_bw() +
+    theme(legend.position = 'none')
+  return(pic)
+}
+
+
+#' Plot the data distribution of each sample
+#'
+#' @param dat_matrix The data matrix with column in sample and row in feature
+#' @param color Character giving the colour of the plot
+#' @importFrom rlang .data
+#' @import ggplot2
+#'
+#' @return Return a `ggplot` object
+#'
+#' @export
+#'
+plot_distribution <- function(dat_matrix, color = "#EF562D") {
+  dat_df <- stack(as.data.frame(dat_matrix))
+  pic <- ggplot(dat_df) +
+    aes(x = .data$ind, y = .data$values) +
+    geom_boxplot(shape = "circle", color = color) +
+    scale_y_continuous(trans = "log10") +
+    labs(x = 'Sample', y = 'log10 value') +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  return(pic)
+}
+
+
