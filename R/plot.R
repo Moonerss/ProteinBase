@@ -151,7 +151,9 @@ plot_density_by_sample <- function(dat_matrix) {
 #' Plot the data distribution of each sample
 #'
 #' @param dat_matrix The data matrix with column in sample and row in feature
-#' @param color Character giving the colour of the plot
+#' @param group
+#' @param trans
+#' @param color Character giving the color of the plot
 #' @importFrom rlang .data
 #' @import ggplot2
 #'
@@ -159,15 +161,43 @@ plot_density_by_sample <- function(dat_matrix) {
 #'
 #' @export
 #'
-plot_distribution <- function(dat_matrix, color = "#EF562D") {
-  dat_df <- stack(as.data.frame(dat_matrix))
-  pic <- ggplot(dat_df) +
-    aes(x = .data$ind, y = .data$values) +
-    geom_boxplot(shape = "circle", color = color) +
-    scale_y_continuous(trans = "log10") +
-    labs(x = 'Sample', y = 'log10 value') +
-    theme_bw() +
-    theme(axis.text.x = element_text(angle = 90, hjust = 1))
+qc_boxplot <- function(data_matrix, group = NULL, trans = c('log10', 'log2'), color = "#EF562D") {
+  if (is.null(group)) {
+    dat_df <- stack(as.data.frame(data_matrix))
+    pic <- ggplot(dat_df) +
+      aes(x = .data$ind, y = .data$values) +
+      geom_boxplot(shape = "circle", color = color) +
+      scale_y_continuous(trans = trans, labels = function(x) sprintf("%g", x)) +
+      labs(x = 'Sample', y = paste0(trans, ' value')) +
+      theme_bw() +
+      theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  } else {
+
+    ## order after groups
+    colnames(group) <- c('ID', 'Type')
+    group <- group %>% arrange(ID)
+    dat <- data_matrix[, group$ID]
+    plot_dat <- dat %>%
+      as.data.frame() %>%
+      pivot_longer(cols = everything(), names_to = 'ID', values_to = 'value') %>%
+      left_join(group, by = 'ID')
+
+    ## plot
+    if (length(color) < length(unique(group$Type))) {
+      warning('The `color` argument don\'t match with group number, we use random color')
+      color <- get_color_palette(n = length(unique(group$Type)), theme = 'protigy')
+    }
+    pic <- ggplot(plot_dat) +
+      aes(x = .data$ID, y = .data$value, colour = .data$Type) +
+      geom_boxplot(shape = "circle") +
+      scale_color_manual(values = color) +
+      scale_y_continuous(trans = trans, labels = function(x) sprintf("%g", x)) +
+      labs(x = 'Sample', y = paste0(trans, ' value')) +
+      theme_bw() +
+      theme(axis.text.x = element_text(angle = 90, hjust = 1),
+            legend.title = element_blank())
+  }
+
   return(pic)
 }
 

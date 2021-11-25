@@ -11,12 +11,19 @@ LazyData: true
 RoxygenNote: 7.1.2
 Imports: 
     cli,
+    data.table,
     dplyr,
     ggplot2,
     ggpubr,
     magrittr,
+    mclust,
+    mixtools,
+    preprocessCore,
     purrr,
+    RColorBrewer,
+    readxl,
     rlang,
     tibble,
-    VennDiagram
+    VennDiagram,
+    vsn
 License: CC0

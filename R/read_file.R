@@ -58,6 +58,17 @@ read_all_file <- function(path, pattern = NULL, merge = TRUE, recursive = FALSE,
 #  verbose  - whether print useful message
 #  ...      - other arguments of `read_excel` function
 ####################################################################
+
+#' Read all sheets in an excel file
+#' @param file path of the .xls or .xlsx file
+#' @param sheets sheet name or number to read, if NULL read all sheets
+#' @param merge whether merge the data
+#' @param verbos whether print useful message
+#' @param ... other arguments of `read_excel` function
+#'
+#' @import readxl
+#' @importFrom dplyr bind_rows
+#'
 read_all_sheets <- function(file, sheets = NULL, merge = FALSE, verbose = TRUE, ...) {
 
   # check package
@@ -99,11 +110,13 @@ read_all_sheets <- function(file, sheets = NULL, merge = FALSE, verbose = TRUE, 
 }
 
 
+#' decompress files
+#'
 #' @name decompress
+#'
 #' @description 目前支持zip, tar.gz, tar.bz2, tar, gz
 #' @param file 需要进行解压的压缩文件名字
 #' @param outdir 解压后的文件路径名
-#' @returnType
 #' @return
 decompress <- function(file, outdir=NULL) {
   if(is.null(outdir)){

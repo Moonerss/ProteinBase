@@ -2,8 +2,6 @@
 #'
 #' @param data_matrix The data matrix with column in sample and row in feature
 #' @param method different methods to normalize data.
-#' @import
-#' @importFrom
 #'
 #' @return
 #'
@@ -50,7 +48,7 @@ normalize_data <- function(data_matrix, method = c('median', 'mean', 'quantile',
 #' Normalize data by median value or mean value
 #'
 #' @param data_matrix The data matrix with column in sample and row in feature
-#' @importFrom stats median mean
+#' @importFrom stats median
 #'
 #' @return return data matrix after normalize
 #'
@@ -105,8 +103,16 @@ vsn_normalize <- function(data_matrix) {
   return(data.norm)
 }
 
-#' Two component normalize
+#' Two component normalize of data
+#' @param sample the value of one sample
+#' @param type types
+#' @param mode.lower.bound
 #'
+#' @importFrom stats density
+#' @importFrom mixtools normalmixEM
+#' @importFrom mclust Mclust
+#'
+#' @return
 #'
 two_comp_normalize <- function (sample, type='default', mode.lower.bound=-3) {
   #   1. For all sample types, fit a 2-component gaussian mixture model using normalmixEM.
