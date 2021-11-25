@@ -1,6 +1,6 @@
 #' get color themes
 #' @param n the number of color
-#' @param alpha
+#' @param alpha the color transparency. range [0,1].
 #' @param theme use color from which theme
 #'
 #' @importFrom grDevices terrain.colors cm.colors topo.colors

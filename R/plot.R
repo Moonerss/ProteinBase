@@ -151,8 +151,9 @@ plot_density_by_sample <- function(dat_matrix) {
 #' Plot the data distribution of each sample
 #'
 #' @param dat_matrix The data matrix with column in sample and row in feature
-#' @param group
-#' @param trans
+#' @param group A data frame contain two columns. The first column is sample name matched with colnames of data,
+#' The second column is the cluster label of samples.
+#' @param trans plot after tansfrom the value
 #' @param color Character giving the color of the plot
 #' @importFrom rlang .data
 #' @import ggplot2
