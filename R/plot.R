@@ -7,6 +7,7 @@
 #' @param group A data frame contain two columns. The first column is sample name matched with colnames of data,
 #' The second column is the cluster label of samples.
 #' @param pic_title The title of plot.
+#' @param scale a logical value indicating whether the variables should be scaled to have unit variance when use \code{\link{prcomp}}
 #' @param ellipse Whether add the confidence ellipse.
 #'
 #' @return
@@ -14,7 +15,7 @@
 #'
 #' @export
 #'
-plot_pca <- function(data, group, pic_title = "All-PCA", ellipse = FALSE) {
+plot_pca <- function(data, group, pic_title = "All-PCA", scale = TRUE, ellipse = FALSE) {
   # check samples
   colnames(group) <- c('ID', 'Type')
   if (ncol(data) != length(unique(group$ID))) {
@@ -26,21 +27,40 @@ plot_pca <- function(data, group, pic_title = "All-PCA", ellipse = FALSE) {
   subdata <- subset(data, select = ID)
   #subdata=log2(subdata)  #定量矩阵有0值，不能直接log转换
   subdata <- t(na.omit(subdata))
-  data.pca <- prcomp(subdata, scale. = TRUE)
+  pcobj <- prcomp(subdata, scale = scale)
   # summary(data.pca)
-  pca <- as.data.frame(data.pca$x)
+  ## extract data for plot
+  ## Reference: https://github.com/vqv/ggbiplot/blob/master/R/ggbiplot.r
+  nobs.factor <- sqrt(nrow(pcobj$x) - 1)
+  d <- pcobj$sdev
+  u <- sweep(pcobj$x, 2, 1 / (d * nobs.factor), FUN = '*')
+  v <- pcobj$rotation
+  choices = 1:2
+  choices <- pmin(choices, ncol(u))
+  pca <- as.data.frame(sweep(u[,choices], 2, d[choices]^0, FUN='*'))
+  names(pca) <- c('PC1', 'PC2')
   pca$ID <- rownames(pca)
   pca <- merge(pca, group, by = "ID")
-  percent1 <- sprintf("%.1f%%", data.pca$sdev[1]^2/sum(data.pca$sdev^2)*100)
-  percent2 <- sprintf("%.1f%%", data.pca$sdev[2]^2/sum(data.pca$sdev^2)*100)
-  xlabel <- paste("PC1 (",percent1,")")
-  ylabel <- paste("PC2 (",percent2,")")
+
+  # labels
+  u.axis.labs <- paste('PC', choices, sep='')
+  u.axis.labs <- paste(u.axis.labs,
+                       sprintf('(%0.1f%%)',
+                               100 * pcobj$sdev[choices]^2/sum(pcobj$sdev^2)))
+
+  # pca <- as.data.frame(pcobja$x)
+  # pca$ID <- rownames(pca)
+  # pca <- merge(pca, group, by = "ID")
+  # percent1 <- sprintf("%.1f%%", data.pca$sdev[1]^2/sum(data.pca$sdev^2)*100)
+  # percent2 <- sprintf("%.1f%%", data.pca$sdev[2]^2/sum(data.pca$sdev^2)*100)
+  # xlabel <- paste("PC1 (",percent1,")")
+  # ylabel <- paste("PC2 (",percent2,")")
 
   p <- ggplot(pca, aes(x = .data$PC1, y = .data$PC2, fill = .data$Type)) +
     geom_point(shape = "circle filled", size = 2.5, colour = 'black') +
     # geom_text(aes(label = ID), hjust = 0, vjust = 0) +
     scale_fill_brewer(palette = "Set1", direction = 1) +
-    labs(x = xlabel, y = ylabel, title = pic_title) +
+    labs(x = u.axis.labs[1], y = u.axis.labs[2], title = pic_title) +
     guides(fill = guide_legend(title = "Sample type")) +
     theme_bw() +
     theme(plot.title = element_text(hjust=0.5))
