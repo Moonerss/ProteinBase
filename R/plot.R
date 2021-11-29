@@ -1,13 +1,17 @@
 #' PCA analysis of data
 #'
+#' @details
+#' Note that \code{scale = TRUE} cannot be used if there are zero or constant (for \code{center = TRUE}) variables.
 #' @importFrom rlang .data
 #' @import ggplot2
+#' @import stats prcomp
 #' @param data A matrix representing the genomic data such as gene expression data, miRNA expression data.\cr
 #' For the matrix, the rows represent the genomic features, and the columns represent the samples.
 #' @param group A data frame contain two columns. The first column is sample name matched with colnames of data,
 #' The second column is the cluster label of samples.
-#' @param pic_title The title of plot.
+#' @param center a logical value indicating whether the variables should be shifted to be zero centered. Alternately, a vector of length equal the number of columns of x can be supplied. The value is passed to \code{scale}.
 #' @param scale a logical value indicating whether the variables should be scaled to have unit variance when use \code{\link{prcomp}}
+#' @param pic_title The title of plot.
 #' @param ellipse Whether add the confidence ellipse.
 #'
 #' @return
@@ -15,7 +19,8 @@
 #'
 #' @export
 #'
-plot_pca <- function(data, group, pic_title = "All-PCA", scale = TRUE, ellipse = FALSE) {
+plot_pca <- function(data, group, center = TRUE, scale = FALSE,
+                     pic_title = "All-PCA", ellipse = FALSE) {
   # check samples
   colnames(group) <- c('ID', 'Type')
   if (ncol(data) != length(unique(group$ID))) {
@@ -27,34 +32,18 @@ plot_pca <- function(data, group, pic_title = "All-PCA", scale = TRUE, ellipse =
   subdata <- subset(data, select = ID)
   #subdata=log2(subdata)  #定量矩阵有0值，不能直接log转换
   subdata <- t(na.omit(subdata))
-  pcobj <- prcomp(subdata, scale = scale)
+  pcobj <- prcomp(subdata, scale = scale, center = center)
   # summary(data.pca)
   ## extract data for plot
-  ## Reference: https://github.com/vqv/ggbiplot/blob/master/R/ggbiplot.r
-  nobs.factor <- sqrt(nrow(pcobj$x) - 1)
-  d <- pcobj$sdev
-  u <- sweep(pcobj$x, 2, 1 / (d * nobs.factor), FUN = '*')
-  v <- pcobj$rotation
-  choices = 1:2
-  choices <- pmin(choices, ncol(u))
-  pca <- as.data.frame(sweep(u[,choices], 2, d[choices]^0, FUN='*'))
-  names(pca) <- c('PC1', 'PC2')
+  ## Reference: StatQuest
+  pca <- as.data.frame(pcobj$x)
   pca$ID <- rownames(pca)
   pca <- merge(pca, group, by = "ID")
-
   # labels
-  u.axis.labs <- paste('PC', choices, sep='')
+  u.axis.labs <- paste('PC', 1:2, sep='')
   u.axis.labs <- paste(u.axis.labs,
                        sprintf('(%0.1f%%)',
-                               100 * pcobj$sdev[choices]^2/sum(pcobj$sdev^2)))
-
-  # pca <- as.data.frame(pcobja$x)
-  # pca$ID <- rownames(pca)
-  # pca <- merge(pca, group, by = "ID")
-  # percent1 <- sprintf("%.1f%%", data.pca$sdev[1]^2/sum(data.pca$sdev^2)*100)
-  # percent2 <- sprintf("%.1f%%", data.pca$sdev[2]^2/sum(data.pca$sdev^2)*100)
-  # xlabel <- paste("PC1 (",percent1,")")
-  # ylabel <- paste("PC2 (",percent2,")")
+                               100 * pcobj$sdev[1:2]^2/sum(pcobj$sdev^2)))
 
   p <- ggplot(pca, aes(x = .data$PC1, y = .data$PC2, fill = .data$Type)) +
     geom_point(shape = "circle filled", size = 2.5, colour = 'black') +
