@@ -1,26 +1,31 @@
-#' Normalize dat with different method
+#' Normalize data with different method
 #'
 #' @param data_matrix The data matrix with column in sample and row in feature
 #' @param method different methods to normalize data.
+#' \describe{
+#'    \item{\code{median-MAD}}{median-centering followed by median absolute deviation (MAD) scaling}
+#'    \item{\code{zscore}}{mean-centering followed by standard deviation scaling}
+#'    \item{\code{VSN}}{use VSN method normalize data}
+#'    \item{\code{quantile}}{use quantile normalization method normalize data}
+#'    \item{\code{2-component}}{use 2-component gaussian mixture model normalize data}
+#' }
 #'
-#' @return
+#' @seealso \code{\link[vsn]{justvsn}}
 #'
 #' @export
-normalize_data <- function(data_matrix, method = c('median-MAD', 'mean', 'quantile', 'upper_quantile', 'VSN', '2-component')) {
+normalize_data <- function(data_matrix, method = c('median-MAD', 'zscore', 'VSN', 'quantile', '2-component')) {
 
   cat('\n\n-- normalize data --\n\n')
 
   method = match.arg(method)
 
   cat('   normalization method: ', method, '\n')
-  if (method == 'median') {
+  if (method == 'median-MAD') {
     data_norm <- scale_normalize(data_matrix, method = 'median')
-  } else if (method == 'mean') {
+  } else if (method == 'zscore') {
     data_norm <- scale_normalize(data_matrix, method = 'mean')
   } else if (method == 'quantile') {
     data_norm <- quantile_normalize(data_matrix)
-  } else if (method == 'upper_quantile') {
-    data_norm <- upper_quantile_normalize(data_matrix)
   } else if (method == 'VSN') {
     data_norm <- variance_stabilizing_normalize(data_matrix)
   } else if (method == '2-component') {
@@ -28,8 +33,8 @@ normalize_data <- function(data_matrix, method = c('median-MAD', 'mean', 'quanti
     data.norm.list <- vector('list', ncol(data_matrix))
     names(data.norm.list) <- colnames(data_matrix)
 
-    for(x in colnames(data)){
-      res <- try(two.comp.normalize(data[, x], type="unimodal"))
+    for(x in colnames(data_matrix)){
+      res <- try(two_comp_normalize(data_matrix[, x], type="unimodal"))
       data.norm.list[[x]] <- res
       if(class(res) == 'try-error') break;
     }
@@ -48,11 +53,15 @@ normalize_data <- function(data_matrix, method = c('median-MAD', 'mean', 'quanti
 #' Normalize data by median value or mean value
 #'
 #' @param data_matrix The data matrix with column in sample and row in feature
-#' @param method The normalization method: \code{median-MAD} median-centering followed by median absolute deviation (MAD) scaling,
-#' \code{zscore} mean-centering followed by standard deviation scaling.
+#' @param method The normalization method:
+#' \describe{
+#'    \item{\code{median-MAD}}{median-centering followed by median absolute deviation (MAD) scaling}
+#'    \item{\code{zscore}}{mean-centering followed by standard deviation scaling}
+#' }
 #' @importFrom stats median mad sd
 #'
 #' @return return data matrix after normalize
+#' @export
 #'
 scale_normalize <- function(data_matrix, method = c('median-MAD', 'zscore')) {
   ## Reference: the function `scale()`
@@ -74,19 +83,20 @@ scale_normalize <- function(data_matrix, method = c('median-MAD', 'zscore')) {
 #' @importFrom preprocessCore normalize.quantiles
 #'
 #' @return return data matrix after normalize
+#' @export
 #'
 quantile_normalize <- function(data_matrix) {
   data.norm <- normalize.quantiles(data_matrix)
   return(data.norm)
 }
 
-#' Normalize data use upper quantile
-#'
-#' @param data_matrix The data matrix with column in sample and row in feature
-#' @importFrom stats quantile
-#'
-#' @return return data matrix after normalize
-#'
+# Normalize data use upper quantile
+#
+# @param data_matrix The data matrix with column in sample and row in feature
+# @importFrom stats quantile
+#
+# @return return data matrix after normalize
+#
 # upper_quantile_normalize <- function(data_matrix) {
 #   data.norm <- apply(data, 2, function(x) x - quantile(x, c(0.75),na.rm=T))
 #   return(data.norm)
@@ -99,6 +109,7 @@ quantile_normalize <- function(data_matrix) {
 #' @importFrom vsn justvsn
 #'
 #' @return return data matrix after normalize
+#' @export
 #'
 vsn_normalize <- function(data_matrix) {
   data.norm <- justvsn(data_matrix)
@@ -108,14 +119,12 @@ vsn_normalize <- function(data_matrix) {
 #' Two component normalize of data
 #' @param sample the value of one sample
 #' @param type types
-#' @param mode.lower.bound
+#' @param mode.lower.bound mode.lower.bound
 #'
 #' @importFrom stats density
 #' @importFrom mixtools normalmixEM
 #' @importFrom mclust Mclust
-#'
-#' @return
-#'
+#' @export
 two_comp_normalize <- function (sample, type='default', mode.lower.bound=-3) {
   #   1. For all sample types, fit a 2-component gaussian mixture model using normalmixEM.
   #   2. For the bimodal samples, find the major mode M1 by kernel density estimation
@@ -134,11 +143,11 @@ two_comp_normalize <- function (sample, type='default', mode.lower.bound=-3) {
   cat('\n-- two.comp.normalize --\n')
   is.error <- function(x) inherits(x, "try-error")             # function to check for error
 
-  data <- sample [ !is.na (sample) ]
-  data.range <- diff (range (data))
-  dens <- try (density (data, kernel='gaussian', bw='SJ'))     # gaussian kernel with S-J bandwidth
+  dat <- sample [ !is.na (sample) ]
+  data.range <- diff (range (dat))
+  dens <- try (density (dat, kernel='gaussian', bw='SJ'))     # gaussian kernel with S-J bandwidth
   if (is.error (dens))                                         # sometimes, SJ bw estimation fails
-    dens <- density (data, kernel='gaussian', bw='ucv')        # in such cases, use unbiased CV
+    dens <- density (dat, kernel='gaussian', bw='ucv')        # in such cases, use unbiased CV
   # (see Venalbles & Ripley, 2002, pg, 129
   #  and Density Estimation, S.J.Sheather, Stat. Sci. 2004)
   # find major (highest) mode > -3 (to avoid problems with lower mode having higher density than higher mode)
@@ -146,9 +155,9 @@ two_comp_normalize <- function (sample, type='default', mode.lower.bound=-3) {
   dens.x <- dens$x [x.range];  dens.y <- dens$y [x.range]
   mode <- dens.x[which.max(dens.y)]
   if (type=='bimodal') mean.constr <- c (NA, mode) else mean.constr <- c (mode, mode)
-  model <- normalmixEM (data, k=2, mean.constr=mean.constr, maxit=10000)
-  model.rep <- normalmixEM (data, k=2, mean.constr=mean.constr, maxit=10000)
-  model.alt <- Mclust (data, G=2, modelNames=c ("V","E"))
+  model <- normalmixEM (dat, k=2, mean.constr=mean.constr, maxit=10000)
+  model.rep <- normalmixEM (dat, k=2, mean.constr=mean.constr, maxit=10000)
+  model.alt <- Mclust (dat, G=2, modelNames=c ("V","E"))
   # V results is separate SDs for each cluster; E fits a single SD for both clusters
   if (length (model.alt$parameters$variance$sigmasq)==1)  # latter code expects two SD values
     model.alt$parameters$variance$sigmasq <- rep (model.alt$parameters$variance$sigmasq, 2)
@@ -173,8 +182,8 @@ two_comp_normalize <- function (sample, type='default', mode.lower.bound=-3) {
           abs (sum (c (model$mu, model$sigma) - c (model.rep$mu, model.rep$sigma))) > 1e-3 ) {
     # if major mode (and SD of mode) is not within 5% of data range, or if the other mean (for bimodals only)
     # is not within 25% of the Mclust result, try again
-    model <- normalmixEM (data, k=2, mean.constr=mean.constr, maxit=10000)
-    model.rep <- normalmixEM (data, k=2, mean.constr=mean.constr, maxit=10000)
+    model <- normalmixEM (dat, k=2, mean.constr=mean.constr, maxit=10000)
+    model.rep <- normalmixEM (dat, k=2, mean.constr=mean.constr, maxit=10000)
 
     ###############################
     ## error handling
@@ -198,11 +207,11 @@ two_comp_normalize <- function (sample, type='default', mode.lower.bound=-3) {
   norm.sd <- ifelse (type=='bimodal', model$sigma[which(model$mu==mode)], min (model$sigma))
 
   # normalize by standardizing
-  data <- data - norm.mean
-  data <- data / norm.sd
+  dat <- dat - norm.mean
+  dat <- dat / norm.sd
 
   # return normalized data reorganized to original order
-  sample [ !is.na (sample) ] <- data
+  sample [ !is.na (sample) ] <- dat
   cat('\n-- two.comp.normalize exit --\n')
   return ( list (norm.sample=sample, norm.mean=norm.mean, norm.sd=norm.sd, fit=unlist (c(model$mu, model$sigma))) )
 }
