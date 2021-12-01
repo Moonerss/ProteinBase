@@ -15,19 +15,18 @@ read_all_file(
 }
 \arguments{
 \item{path}{a character vector of full path names; the default corresponds to the working directory.
-Tilde expansion (see \links[base::path.expand]) is performed. Missing values will be ignored.
+Tilde expansion (see \link[base]{path.expand}) is performed. Missing values will be ignored.
 Elements with a marked encoding will be converted to the native encoding (and if that fails, considered non-existent).}
 
 \item{pattern}{an optional regular expression. Only file names which match the regular expression will be returned.}
 
 \item{merge}{whether merge the data, default TRUE. or return a list.}
 
-\item{verbose}{output other useful message, defult TRUE.}
+\item{recursive}{logical. Should the listing recurse into directories?}
 
-\item{...}{other argument of \code{\links[data.table::fread]}}
-}
-\value{
+\item{verbose}{output other useful message, default TRUE.}
 
+\item{...}{other argument of \code{\link[data.table]{fread}}}
 }
 \description{
 Read all file under dictionary in a batch

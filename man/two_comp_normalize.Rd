@@ -11,10 +11,7 @@ two_comp_normalize(sample, type = "default", mode.lower.bound = -3)
 
 \item{type}{types}
 
-\item{mode.lower.bound}{}
-}
-\value{
-
+\item{mode.lower.bound}{mode.lower.bound}
 }
 \description{
 Two component normalize of data

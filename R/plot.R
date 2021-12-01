@@ -161,13 +161,16 @@ plot_density_by_sample <- function(dat_matrix) {
 
 #' Plot the data distribution of each sample
 #'
-#' @param dat_matrix The data matrix with column in sample and row in feature
+#' @param data_matrix The data matrix with column in sample and row in feature
 #' @param group A data frame contain two columns. The first column is sample name matched with colnames of data,
 #' The second column is the cluster label of samples.
 #' @param trans plot after tansfrom the value
 #' @param color Character giving the color of the plot
 #' @importFrom rlang .data
 #' @import ggplot2
+#' @importFrom dplyr arrange left_join
+#' @importFrom tidyr pivot_longer
+#' @importFrom tidyselect everything
 #'
 #' @return Return a `ggplot` object
 #'
@@ -189,13 +192,13 @@ qc_boxplot <- function(data_matrix, group = NULL, trans = c('log10', 'log2'), co
 
     ## order after groups
     colnames(group) <- c('ID', 'Type')
-    group <- group %>% arrange(Type)
+    group <- group %>% arrange(.data$Type)
     dat <- data_matrix[, group$ID]
     plot_dat <- dat %>%
       as.data.frame() %>%
       pivot_longer(cols = everything(), names_to = 'ID', values_to = 'value') %>%
       left_join(group, by = 'ID') %>%
-      mutate(ID = factor(ID, levels = group$ID))
+      mutate(ID = factor(.data$ID, levels = group$ID))
 
     ## plot
     if (length(color) < length(unique(group$Type))) {

@@ -6,7 +6,7 @@
 #' @return
 #'
 #' @export
-normalize_data <- function(data_matrix, method = c('median', 'mean', 'quantile', 'upper_quantile', 'VSN', '2-component')) {
+normalize_data <- function(data_matrix, method = c('median-MAD', 'mean', 'quantile', 'upper_quantile', 'VSN', '2-component')) {
 
   cat('\n\n-- normalize data --\n\n')
 
@@ -48,18 +48,20 @@ normalize_data <- function(data_matrix, method = c('median', 'mean', 'quantile',
 #' Normalize data by median value or mean value
 #'
 #' @param data_matrix The data matrix with column in sample and row in feature
-#' @importFrom stats median
+#' @param method The normalization method: \code{median-MAD} median-centering followed by median absolute deviation (MAD) scaling,
+#' \code{zscore} mean-centering followed by standard deviation scaling.
+#' @importFrom stats median mad sd
 #'
 #' @return return data matrix after normalize
 #'
-scale_normalize <- function(data_matrix, method = c('median', 'mean')) {
+scale_normalize <- function(data_matrix, method = c('median-MAD', 'zscore')) {
   ## Reference: the function `scale()`
   method <- match.arg(method)
   if (method == 'median') {
     norm.params <- t(apply(data_matrix, 2, function (x) c(center = median(x, na.rm = T), scale = mad(x, na.rm = T))))
     data.norm <- scale(data_matrix, center = norm.params[,'center'], scale = norm.params[,'scale'])
   } else {
-    norm.params <- t(apply(data_matrix, 2, function (x) c(center = mean(x, na.rm = T), scale = sd(x, na.rm = T))))
+    norm.params <- t(apply(data_matrix, 2, function (x) c(center = mean(x, na.rm = T), scale = mean(x, na.rm = T))))
     data.norm <- scale(data_matrix, center = norm.params[,'center'], scale = norm.params[,'scale'])
   }
   return(data.norm)
@@ -85,10 +87,10 @@ quantile_normalize <- function(data_matrix) {
 #'
 #' @return return data matrix after normalize
 #'
-upper_quantile_normalize <- function(data_matrix) {
-  data.norm <- apply(data, 2, function(x) x - quantile(x, c(0.75),na.rm=T))
-  return(data.norm)
-}
+# upper_quantile_normalize <- function(data_matrix) {
+#   data.norm <- apply(data, 2, function(x) x - quantile(x, c(0.75),na.rm=T))
+#   return(data.norm)
+# }
 
 
 #' VSN normalization of data

@@ -4,7 +4,14 @@
 \alias{plot_pca}
 \title{PCA analysis of data}
 \usage{
-plot_pca(data, group, pic_title = "All-PCA", ellipse = FALSE)
+plot_pca(
+  data,
+  group,
+  center = TRUE,
+  scale = FALSE,
+  pic_title = "All-PCA",
+  ellipse = FALSE
+)
 }
 \arguments{
 \item{data}{A matrix representing the genomic data such as gene expression data, miRNA expression data.\cr
@@ -12,6 +19,10 @@ For the matrix, the rows represent the genomic features, and the columns represe
 
 \item{group}{A data frame contain two columns. The first column is sample name matched with colnames of data,
 The second column is the cluster label of samples.}
+
+\item{center}{a logical value indicating whether the variables should be shifted to be zero centered. Alternately, a vector of length equal the number of columns of x can be supplied. The value is passed to \code{scale}.}
+
+\item{scale}{a logical value indicating whether the variables should be scaled to have unit variance when use \code{\link{prcomp}}}
 
 \item{pic_title}{The title of plot.}
 
@@ -22,4 +33,7 @@ Return a `ggplot` object contained a PCA plot.
 }
 \description{
 PCA analysis of data
+}
+\details{
+Note that \code{scale = TRUE} cannot be used if there are zero or constant (for \code{center = TRUE}) variables.
 }

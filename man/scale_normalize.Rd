@@ -4,10 +4,16 @@
 \alias{scale_normalize}
 \title{Normalize data by median value or mean value}
 \usage{
-scale_normalize(data_matrix, method = c("median", "mean"))
+scale_normalize(data_matrix, method = c("median-MAD", "zscore"))
 }
 \arguments{
 \item{data_matrix}{The data matrix with column in sample and row in feature}
+
+\item{method}{The normalization method:
+\describe{
+   \item{\code{median-MAD}}{median-centering followed by median absolute deviation (MAD) scaling}
+   \item{\code{zscore}}{mean-centering followed by standard deviation scaling}
+}}
 }
 \value{
 return data matrix after normalize

@@ -2,21 +2,28 @@
 % Please edit documentation in R/normalize.R
 \name{normalize_data}
 \alias{normalize_data}
-\title{Normalize dat with different method}
+\title{Normalize data with different method}
 \usage{
 normalize_data(
   data_matrix,
-  method = c("median", "mean", "quantile", "upper_quantile", "VSN", "2-component")
+  method = c("median-MAD", "zscore", "VSN", "quantile", "2-component")
 )
 }
 \arguments{
 \item{data_matrix}{The data matrix with column in sample and row in feature}
 
-\item{method}{different methods to normalize data.}
-}
-\value{
-
+\item{method}{different methods to normalize data.
+\describe{
+   \item{\code{median-MAD}}{median-centering followed by median absolute deviation (MAD) scaling}
+   \item{\code{zscore}}{mean-centering followed by standard deviation scaling}
+   \item{\code{VSN}}{use VSN method normalize data}
+   \item{\code{quantile}}{use quantile normalization method normalize data}
+   \item{\code{2-component}}{use 2-component gaussian mixture model normalize data}
+}}
 }
 \description{
-Normalize dat with different method
+Normalize data with different method
+}
+\seealso{
+\code{\link[vsn]{justvsn}}
 }

@@ -1,16 +1,15 @@
 #' Read all file under dictionary in a batch
 #'
 #' @param path a character vector of full path names; the default corresponds to the working directory.
-#' Tilde expansion (see \links[base::path.expand]) is performed. Missing values will be ignored.
+#' Tilde expansion (see \link[base]{path.expand}) is performed. Missing values will be ignored.
 #' Elements with a marked encoding will be converted to the native encoding (and if that fails, considered non-existent).
 #' @param pattern an optional regular expression. Only file names which match the regular expression will be returned.
 #' @param merge whether merge the data, default TRUE. or return a list.
-#' @param verbose output other useful message, defult TRUE.
-#' @param ... other argument of \code{\links[data.table::fread]}
+#' @param recursive logical. Should the listing recurse into directories?
+#' @param verbose output other useful message, default TRUE.
+#' @param ... other argument of \code{\link[data.table]{fread}}
 #'
 #' @importFrom data.table fread
-#'
-#' @return
 #'
 #' @export
 #'
@@ -63,7 +62,7 @@ read_all_file <- function(path, pattern = NULL, merge = TRUE, recursive = FALSE,
 #' @param file path of the .xls or .xlsx file
 #' @param sheets sheet name or number to read, if NULL read all sheets
 #' @param merge whether merge the data
-#' @param verbos whether print useful message
+#' @param verbose whether print useful message
 #' @param ... other arguments of `read_excel` function
 #'
 #' @import readxl
@@ -117,7 +116,10 @@ read_all_sheets <- function(file, sheets = NULL, merge = FALSE, verbose = TRUE, 
 #' @description 目前支持zip, tar.gz, tar.bz2, tar, gz
 #' @param file 需要进行解压的压缩文件名字
 #' @param outdir 解压后的文件路径名
-#' @return
+#'
+#' @importFrom utils unzip untar
+#' @importFrom R.utils gunzip
+#'
 decompress <- function(file, outdir=NULL) {
   if(is.null(outdir)){
     outdir <- dirname(file)
@@ -138,7 +140,6 @@ decompress <- function(file, outdir=NULL) {
     untar(file, exdir=outdir)
     return(untar(file, exdir=outdir, list=TRUE))
   } else if(grepl("\\.gz$", fileType)) {
-    library(R.utils)
     gunzip(file, overwrite=TRUE, remove=FALSE)
     if (outdir != dirname(file)) {
       #解压后的文件地址

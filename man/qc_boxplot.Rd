@@ -12,14 +12,14 @@ qc_boxplot(
 )
 }
 \arguments{
+\item{data_matrix}{The data matrix with column in sample and row in feature}
+
 \item{group}{A data frame contain two columns. The first column is sample name matched with colnames of data,
 The second column is the cluster label of samples.}
 
 \item{trans}{plot after tansfrom the value}
 
 \item{color}{Character giving the color of the plot}
-
-\item{dat_matrix}{The data matrix with column in sample and row in feature}
 }
 \value{
 Return a `ggplot` object

@@ -13,9 +13,9 @@ read_all_sheets(file, sheets = NULL, merge = FALSE, verbose = TRUE, ...)
 
 \item{merge}{whether merge the data}
 
-\item{...}{other arguments of `read_excel` function}
+\item{verbose}{whether print useful message}
 
-\item{verbos}{whether print useful message}
+\item{...}{other arguments of `read_excel` function}
 }
 \description{
 Read all sheets in an excel file

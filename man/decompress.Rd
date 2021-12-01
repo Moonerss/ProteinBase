@@ -11,9 +11,6 @@ decompress(file, outdir = NULL)
 
 \item{outdir}{解压后的文件路径名}
 }
-\value{
-
-}
 \description{
 目前支持zip, tar.gz, tar.bz2, tar, gz
 }

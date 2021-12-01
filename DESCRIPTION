@@ -20,10 +20,13 @@ Imports:
     mixtools,
     preprocessCore,
     purrr,
+    R.utils,
     RColorBrewer,
     readxl,
     rlang,
     tibble,
+    tidyr,
+    tidyselect,
     VennDiagram,
     vsn
 License: CC0
