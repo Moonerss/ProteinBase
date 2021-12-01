@@ -4,7 +4,7 @@
 #' Note that \code{scale = TRUE} cannot be used if there are zero or constant (for \code{center = TRUE}) variables.
 #' @importFrom rlang .data
 #' @import ggplot2
-#' @import stats prcomp
+#' @importFrom stats prcomp
 #' @param data A matrix representing the genomic data such as gene expression data, miRNA expression data.\cr
 #' For the matrix, the rows represent the genomic features, and the columns represent the samples.
 #' @param group A data frame contain two columns. The first column is sample name matched with colnames of data,
@@ -49,6 +49,8 @@ plot_pca <- function(data, group, center = TRUE, scale = FALSE,
     geom_point(shape = "circle filled", size = 2.5, colour = 'black') +
     # geom_text(aes(label = ID), hjust = 0, vjust = 0) +
     scale_fill_brewer(palette = "Set1", direction = 1) +
+    scale_x_continuous(labels = function(x) sprintf("%g", x)) +
+    scale_y_continuous(labels = function(x) sprintf("%g", x)) +
     labs(x = u.axis.labs[1], y = u.axis.labs[2], title = pic_title) +
     guides(fill = guide_legend(title = "Sample type")) +
     theme_bw() +
@@ -172,6 +174,8 @@ plot_density_by_sample <- function(dat_matrix) {
 #' @export
 #'
 qc_boxplot <- function(data_matrix, group = NULL, trans = c('log10', 'log2'), color = "#EF562D") {
+
+  trans = match.arg(trans)
   if (is.null(group)) {
     dat_df <- stack(as.data.frame(data_matrix))
     pic <- ggplot(dat_df) +
@@ -185,12 +189,13 @@ qc_boxplot <- function(data_matrix, group = NULL, trans = c('log10', 'log2'), co
 
     ## order after groups
     colnames(group) <- c('ID', 'Type')
-    group <- group %>% arrange(ID)
+    group <- group %>% arrange(Type)
     dat <- data_matrix[, group$ID]
     plot_dat <- dat %>%
       as.data.frame() %>%
       pivot_longer(cols = everything(), names_to = 'ID', values_to = 'value') %>%
-      left_join(group, by = 'ID')
+      left_join(group, by = 'ID') %>%
+      mutate(ID = factor(ID, levels = group$ID))
 
     ## plot
     if (length(color) < length(unique(group$Type))) {
