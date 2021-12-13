@@ -1,3 +1,4 @@
 ^LICENSE\.md$
 ^ProteinBase\.Rproj$
 ^\.Rproj\.user$
+^appveyor\.yml$

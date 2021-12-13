@@ -2,6 +2,7 @@
 
 <!-- badges: start -->
 
+[![AppVeyor build status](https://ci.appveyor.com/api/projects/status/github/Moonerss/ProteinBase?branch=master&svg=true)](https://ci.appveyor.com/project/Moonerss/ProteinBase)
 <!-- badges: end -->
 
 **ProteinBase** is built to make some function for proteinomics analysis
